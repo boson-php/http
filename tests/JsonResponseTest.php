@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Boson\Component\Http\Tests;
 
+use Boson\Component\Http\Component\StatusCode;
 use Boson\Component\Http\JsonResponse;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -18,7 +19,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithSimpleData(): void
@@ -29,7 +30,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithComplexData(): void
@@ -52,7 +53,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithCustomHeaders(): void
@@ -70,7 +71,7 @@ final class JsonResponseTest extends TestCase
         self::assertSame('application/json', $response->headers->first('content-type'));
         self::assertTrue($response->headers->has('x-custom'));
         self::assertSame('value', $response->headers->first('x-custom'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithCustomStatus(): void
@@ -84,7 +85,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json', $response->headers->first('content-type'));
-        self::assertSame(404, $response->status);
+        self::assertSame(StatusCode::NotFound, $response->status);
     }
 
     public function testCreateWithCustomJsonEncodingFlags(): void
@@ -98,7 +99,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithHtmlSafeEncoding(): void
@@ -114,7 +115,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithExistingContentType(): void
@@ -130,7 +131,7 @@ final class JsonResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('application/json; charset=utf-8', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithInvalidJsonData(): void

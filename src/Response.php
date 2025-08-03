@@ -4,108 +4,161 @@ declare(strict_types=1);
 
 namespace Boson\Component\Http;
 
-use Boson\Component\Http\Component\BodyFactory;
-use Boson\Component\Http\Component\HeadersFactory;
-use Boson\Component\Http\Component\HeadersMap;
-use Boson\Component\Http\Component\StatusCodeFactory;
-use Boson\Contracts\Http\Component\HeadersInterface;
+use Boson\Component\Http\Component\Body;
+use Boson\Component\Http\Component\MutableHeadersMap;
+use Boson\Component\Http\Component\StatusCode;
+use Boson\Component\Http\Exception\InvalidBodyException;
+use Boson\Component\Http\Exception\InvalidHeadersException;
+use Boson\Contracts\Http\Component\Body\BodyProviderInterface;
+use Boson\Contracts\Http\Component\Body\EvolvableBodyProviderInterface;
+use Boson\Contracts\Http\Component\Body\MutableBodyProviderInterface;
+use Boson\Contracts\Http\Component\Headers\EvolvableHeadersProviderInterface;
+use Boson\Contracts\Http\Component\Headers\HeadersProviderInterface;
+use Boson\Contracts\Http\Component\Headers\MutableHeadersProviderInterface;
+use Boson\Contracts\Http\Component\MutableHeadersInterface;
+use Boson\Contracts\Http\Component\StatusCode\EvolvableStatusCodeProviderInterface;
+use Boson\Contracts\Http\Component\StatusCode\MutableStatusCodeProviderInterface;
+use Boson\Contracts\Http\Component\StatusCode\StatusCodeProviderInterface;
 use Boson\Contracts\Http\Component\StatusCodeInterface;
-use Boson\Contracts\Http\Factory\Component\BodyFactoryInterface;
-use Boson\Contracts\Http\Factory\Component\HeadersFactoryInterface;
-use Boson\Contracts\Http\Factory\Component\StatusCodeFactoryInterface;
-use Boson\Contracts\Http\Factory\MessageFactoryInterface;
-use Boson\Contracts\Http\Factory\ResponseFactoryInterface;
-use Boson\Contracts\Http\MessageInterface;
+use Boson\Contracts\Http\MutableResponseInterface;
 use Boson\Contracts\Http\ResponseInterface;
 
 /**
- * @phpstan-import-type StatusCodeInputType from ResponseFactoryInterface
- * @phpstan-import-type StatusCodeOutputType from ResponseInterface
- * @phpstan-import-type BodyInputType from MessageFactoryInterface
- * @phpstan-import-type BodyOutputType from MessageInterface
- * @phpstan-import-type HeadersInputType from MessageFactoryInterface
- * @phpstan-import-type HeadersOutputType from MessageInterface
+ * @phpstan-import-type InStatusCodeType from EvolvableStatusCodeProviderInterface
+ * @phpstan-import-type OutStatusCodeType from StatusCodeProviderInterface
+ * @phpstan-import-type OutMutableStatusCodeType from MutableStatusCodeProviderInterface
+ * @phpstan-import-type InHeadersType from EvolvableHeadersProviderInterface
+ * @phpstan-import-type OutHeadersType from HeadersProviderInterface
+ * @phpstan-import-type OutMutableHeadersType from MutableHeadersProviderInterface
+ * @phpstan-import-type InBodyType from EvolvableBodyProviderInterface
+ * @phpstan-import-type OutBodyType from BodyProviderInterface
+ * @phpstan-import-type OutMutableBodyType from MutableBodyProviderInterface
  */
-readonly class Response implements ResponseInterface
+class Response implements MutableResponseInterface
 {
-    public StatusCodeInterface $status;
-
-    public HeadersInterface $headers;
-
-    public string $body;
+    /**
+     * @var InBodyType
+     */
+    final public const string|\Stringable DEFAULT_BODY = '';
 
     /**
-     * @param BodyInputType $body
-     * @param HeadersInputType $headers
-     * @param StatusCodeInputType|StatusCodeInterface $status
+     * @var InStatusCodeType
+     */
+    final public const int|StatusCodeInterface DEFAULT_STATUS_CODE = StatusCode::Ok;
+
+    /**
+     * @var InHeadersType
+     */
+    final public const iterable DEFAULT_HEADERS = [];
+
+    /**
+     * @var OutMutableBodyType
+     */
+    public string $body {
+        /**
+         * @return OutMutableBodyType
+         */
+        get => $this->body;
+        /**
+         * @param InBodyType $body
+         *
+         * @throws InvalidBodyException
+         */
+        set(string|\Stringable $body) => static::castBody($body);
+    }
+
+    /**
+     * @var OutMutableStatusCodeType
+     */
+    public StatusCodeInterface $status {
+        /**
+         * @return OutMutableStatusCodeType
+         */
+        get => $this->status;
+        /**
+         * @param InStatusCodeType $status
+         */
+        set(int|StatusCodeInterface $status) => static::castStatusCode($status);
+    }
+
+    /**
+     * @var OutMutableHeadersType
+     */
+    public MutableHeadersInterface $headers {
+        /**
+         * @return OutMutableHeadersType
+         */
+        get => $this->headers;
+        /**
+         * @param InHeadersType $headers
+         *
+         * @throws InvalidHeadersException
+         */
+        set(iterable $headers) => static::castHeaders($headers);
+    }
+
+    /**
+     * @param InBodyType $body
+     * @param InStatusCodeType $status
+     * @param InHeadersType $headers
      */
     public function __construct(
-        string|\Stringable $body = ResponseFactoryInterface::DEFAULT_BODY,
-        iterable $headers = ResponseFactoryInterface::DEFAULT_HEADERS,
-        int|StatusCodeInterface $status = ResponseFactoryInterface::DEFAULT_STATUS_CODE,
-        BodyFactoryInterface $bodyFactory = new BodyFactory(),
-        HeadersFactoryInterface $headersFactory = new HeadersFactory(),
-        StatusCodeFactoryInterface $statusCodeFactory = new StatusCodeFactory(),
+        string|\Stringable $body = self::DEFAULT_BODY,
+        int|StatusCodeInterface $status = self::DEFAULT_STATUS_CODE,
+        iterable $headers = self::DEFAULT_HEADERS,
     ) {
-        $this->body = $this->createBody($bodyFactory, $body);
-        $this->headers = $this->createHeaders($headersFactory, $headers);
-        $this->status = $this->createCode($statusCodeFactory, $status);
+        $this->body = $body;
+        $this->status = $status;
+        $this->headers = $headers;
+
+        $this->extendHeaders($this->headers);
     }
 
     /**
-     * @param BodyInputType $body
+     * @param InBodyType $body
      *
-     * @return BodyOutputType
+     * @return OutMutableBodyType
+     * @throws InvalidBodyException
      */
-    private function createBody(BodyFactoryInterface $factory, string|\Stringable $body): string
+    public static function castBody(string|\Stringable $body): string
     {
-        return $factory->createBodyFromString($body);
+        return Body::createMutable($body);
     }
 
     /**
-     * @param HeadersInputType $headers
+     * @param InStatusCodeType $status
+     * @param string|null $reason Reason phrase for new non-standard status-code
      *
-     * @return HeadersOutputType
+     * @return OutMutableStatusCodeType
      */
-    private function createHeaders(HeadersFactoryInterface $factory, iterable $headers): HeadersInterface
+    public static function castStatusCode(int|StatusCodeInterface $status, ?string $reason = null): StatusCodeInterface
     {
-        $map = $factory->createHeadersFromIterable($headers);
-
-        if (!$map instanceof HeadersMap) {
-            $map = HeadersMap::createFromHeaders($map);
-        }
-
-        return $this->extendHeaders($map);
+        return StatusCode::createMutable($status, $reason);
     }
 
-    protected function extendHeaders(HeadersMap $headers): HeadersMap
+    /**
+     * @param InHeadersType $headers
+     *
+     * @return OutMutableHeadersType
+     * @throws InvalidHeadersException
+     */
+    public static function castHeaders(iterable $headers): MutableHeadersInterface
+    {
+        return new MutableHeadersMap($headers);
+    }
+
+    protected function extendHeaders(MutableHeadersInterface $headers): void
     {
         // Set UTF-8 text/html content header in case of
         // content-type header line is not defined.
         if (!$headers->has('content-type')) {
-            $headers = $headers->withAddedHeader('content-type', 'text/html; charset=utf-8');
+            $headers->add('content-type', 'text/html; charset=utf-8');
         }
 
         // Fix unnecessary content-length.
         if ($headers->has('transfer-encoding')) {
-            $headers = $headers->withoutHeader('content-length');
+            $headers->remove('content-length');
         }
-
-        return $headers;
-    }
-
-    /**
-     * @param StatusCodeInputType|StatusCodeInterface $code
-     *
-     * @return StatusCodeOutputType
-     */
-    private function createCode(StatusCodeFactoryInterface $factory, int|StatusCodeInterface $code): StatusCodeInterface
-    {
-        if ($code instanceof StatusCodeInterface) {
-            return $code;
-        }
-
-        return $factory->createStatusCode($code);
     }
 
     /**
@@ -121,8 +174,16 @@ readonly class Response implements ResponseInterface
 
         return new self(
             body: $response->body,
-            headers: $response->headers,
             status: $response->status,
+            headers: $response->headers,
         );
+    }
+
+    public function __clone(): void
+    {
+        /**
+         * @link https://wiki.php.net/rfc/readonly_amendment
+         */
+        $this->headers = clone $this->headers;
     }
 }

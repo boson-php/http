@@ -4,19 +4,35 @@ declare(strict_types=1);
 
 namespace Boson\Component\Http\Exception;
 
-class InvalidHeaderNameException extends InvalidHeadersComponentException
+class InvalidHeaderNameException extends InvalidHeadersException
 {
-    public static function becauseHeaderNameIsEmpty(int $index, ?\Throwable $previous = null): self
+    public static function becauseHeaderNameIsInvalid(string $name, ?\Throwable $previous = null): self
     {
-        $message = \sprintf('Header name #%d cannot be empty', $index);
+        $message = \vsprintf('Header name must be compatible with RFC 7230, but "%s" given', [
+            \addcslashes($name, '"'),
+        ]);
 
         return new self($message, previous: $previous);
     }
 
+    public static function becauseHeaderNameIsEmpty(?\Throwable $previous = null): self
+    {
+        return new self('Header name cannot be empty', previous: $previous);
+    }
+
     public static function becauseHeaderNameIsNotString(mixed $name, ?\Throwable $previous = null): self
     {
-        $message = \sprintf('Header name must be non-empty string, but "%s" given', \get_debug_type($name));
+        $message = \vsprintf('Header name must be non-empty string, but "%s" given', [
+            \addcslashes(\get_debug_type($name), '"'),
+        ]);
 
         return new self($message, previous: $previous);
+    }
+
+    public static function becauseStringCastingErrorOccurs(\Stringable $name, ?\Throwable $previous = null): self
+    {
+        $message = 'An error occurred while converting the HTTP header name of type %s to a string';
+
+        return new self(\sprintf($message, $name::class), previous: $previous);
     }
 }

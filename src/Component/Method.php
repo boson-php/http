@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Boson\Component\Http\Component;
 
 use Boson\Component\Http\Component\Method\MethodImpl;
+use Boson\Component\Http\Exception\InvalidMethodException;
+use Boson\Contracts\Http\Component\Method\EvolvableMethodProviderInterface;
+use Boson\Contracts\Http\Component\Method\MethodProviderInterface;
+use Boson\Contracts\Http\Component\Method\MutableMethodProviderInterface;
 use Boson\Contracts\Http\Component\MethodInterface;
 
 require_once __DIR__ . '/Method/constants.php';
@@ -14,6 +18,10 @@ require_once __DIR__ . '/Method/constants.php';
  *
  * Note: Impossible to implement via native PHP enum due to lack of support
  *       for properties: https://externals.io/message/126332
+ *
+ * @phpstan-import-type InMethodType from EvolvableMethodProviderInterface
+ * @phpstan-import-type OutMethodType from MethodProviderInterface
+ * @phpstan-import-type OutMutableMethodType from MutableMethodProviderInterface
  */
 final readonly class Method implements MethodInterface
 {
@@ -671,5 +679,48 @@ final readonly class Method implements MethodInterface
     public static function cases(): array
     {
         return \array_values(self::CASES);
+    }
+
+    /**
+     * @param InMethodType $method
+     *
+     * @return OutMethodType
+     * @throws InvalidMethodException
+     */
+    public static function create(string|\Stringable $method): MethodInterface
+    {
+        if ($method instanceof MethodInterface) {
+            return $method;
+        }
+
+        if ($method instanceof \Stringable) {
+            try {
+                $scalar = (string) $method;
+                /** @phpstan-ignore-next-line : PHPStan false-positive, this is not "dead catch" */
+            } catch (\Throwable $e) {
+                throw InvalidMethodException::becauseStringCastingErrorOccurs($method, $e);
+            }
+
+            $method = $scalar;
+        }
+
+        if ($method === '') {
+            throw InvalidMethodException::becauseMethodIsEmpty();
+        }
+
+        return self::tryFrom($method)
+            ?? new self(\strtoupper($method));
+    }
+
+    /**
+     * @param InMethodType $method
+     *
+     * @return OutMutableMethodType
+     * @throws InvalidMethodException
+     */
+    public static function createMutable(string|\Stringable $method): MethodInterface
+    {
+        // Mutable HTTP method is similar to immutable
+        return self::create($method);
     }
 }

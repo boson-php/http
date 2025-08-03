@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Boson\Component\Http\Tests;
 
+use Boson\Component\Http\Component\StatusCode;
 use Boson\Component\Http\Response;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -18,7 +19,7 @@ final class ResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('text/html; charset=utf-8', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithCustomBody(): void
@@ -29,7 +30,7 @@ final class ResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('text/html; charset=utf-8', $response->headers->first('content-type'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithCustomHeaders(): void
@@ -48,7 +49,7 @@ final class ResponseTest extends TestCase
         self::assertSame('application/json', $response->headers->first('content-type'));
         self::assertTrue($response->headers->has('x-custom'));
         self::assertSame('value', $response->headers->first('x-custom'));
-        self::assertSame(200, $response->status);
+        self::assertSame(StatusCode::Ok, $response->status);
     }
 
     public function testCreateWithCustomStatus(): void
@@ -62,7 +63,7 @@ final class ResponseTest extends TestCase
         self::assertCount(1, $response->headers);
         self::assertTrue($response->headers->has('content-type'));
         self::assertSame('text/html; charset=utf-8', $response->headers->first('content-type'));
-        self::assertSame(404, $response->status);
+        self::assertSame(StatusCode::NotFound, $response->status);
     }
 
     public function testModifyBody(): void
@@ -87,7 +88,7 @@ final class ResponseTest extends TestCase
         $response = new Response();
         $response->status = 500;
 
-        self::assertSame(500, $response->status);
+        self::assertSame(StatusCode::InternalServerError, $response->status);
     }
 
     public function testRemoveContentLengthWhenTransferEncodingPresent(): void

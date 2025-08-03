@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Boson\Component\Http\Tests;
 
+use Boson\Component\Http\Component\Method;
 use Boson\Component\Http\Request;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -14,7 +15,7 @@ final class RequestTest extends TestCase
     {
         $request = new Request();
 
-        self::assertSame('GET', $request->method);
+        self::assertSame(Method::Get, $request->method);
         self::assertSame('about:blank', (string) $request->url);
         self::assertCount(0, $request->headers);
         self::assertSame('', $request->body);
@@ -24,7 +25,7 @@ final class RequestTest extends TestCase
     {
         $request = new Request('POST');
 
-        self::assertSame('POST', $request->method);
+        self::assertSame(Method::Post, $request->method);
         self::assertSame('about:blank', (string) $request->url);
         self::assertCount(0, $request->headers);
         self::assertSame('', $request->body);
@@ -37,7 +38,7 @@ final class RequestTest extends TestCase
             url: 'https://example.com/api',
         );
 
-        self::assertSame('GET', $request->method);
+        self::assertSame(Method::Get, $request->method);
         self::assertSame('https://example.com/api', (string) $request->url);
         self::assertCount(0, $request->headers);
         self::assertSame('', $request->body);
@@ -54,7 +55,7 @@ final class RequestTest extends TestCase
             ],
         );
 
-        self::assertSame('GET', $request->method);
+        self::assertSame(Method::Get, $request->method);
         self::assertSame('/', (string) $request->url);
         self::assertCount(2, $request->headers);
         self::assertTrue($request->headers->has('content-type'));
@@ -73,7 +74,7 @@ final class RequestTest extends TestCase
             body: '{"key": "value"}',
         );
 
-        self::assertSame('POST', $request->method);
+        self::assertSame(Method::Post, $request->method);
         self::assertSame('/', (string) $request->url);
         self::assertCount(0, $request->headers);
         self::assertSame('{"key": "value"}', $request->body);
@@ -92,7 +93,7 @@ final class RequestTest extends TestCase
 
         $request = Request::createFromRequest($original);
 
-        self::assertSame('POST', $request->method);
+        self::assertSame(Method::Post, $request->method);
         self::assertSame('https://example.com/api', (string) $request->url);
         self::assertCount(1, $request->headers);
         self::assertTrue($request->headers->has('content-type'));
@@ -120,6 +121,6 @@ final class RequestTest extends TestCase
     {
         $request = new Request('post');
 
-        self::assertSame('POST', $request->method);
+        self::assertSame(Method::Post, $request->method);
     }
 }

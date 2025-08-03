@@ -20,7 +20,7 @@ final class HeadersMapTest extends TestCase
 
     public function testCreateFromArray(): void
     {
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'Content-Type' => 'application/json',
             'X-Custom-Header' => ['value1', 'value2'],
         ]);
@@ -33,7 +33,7 @@ final class HeadersMapTest extends TestCase
 
     public function testCreateFromHeadersMap(): void
     {
-        $original = HeadersMap::createFromIterable([
+        $original = new HeadersMap([
             'Content-Type' => 'application/json',
         ]);
 
@@ -45,7 +45,7 @@ final class HeadersMapTest extends TestCase
 
     public function testFirstHeader(): void
     {
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'X-Custom' => ['value1', 'value2'],
         ]);
 
@@ -56,7 +56,7 @@ final class HeadersMapTest extends TestCase
 
     public function testAllHeaders(): void
     {
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'X-Custom' => ['value1', 'value2'],
         ]);
 
@@ -66,7 +66,7 @@ final class HeadersMapTest extends TestCase
 
     public function testContainsHeader(): void
     {
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'X-Custom' => ['value1', 'value2'],
         ]);
 
@@ -83,7 +83,7 @@ final class HeadersMapTest extends TestCase
             'x-custom' => 'value2',
         ];
 
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'Content-Type' => 'application/json',
             'X-Custom' => ['value1', 'value2'],
         ]);
@@ -98,7 +98,7 @@ final class HeadersMapTest extends TestCase
 
     public function testHeadersCount(): void
     {
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'Content-Type' => 'application/json',
             'X-Custom' => ['value1', 'value2'],
         ]);
@@ -108,7 +108,7 @@ final class HeadersMapTest extends TestCase
 
     public function testHeaderNameFormatting(): void
     {
-        $headers = HeadersMap::createFromIterable([
+        $headers = new HeadersMap([
             'CONTENT-TYPE' => 'application/json',
             'X-Custom-Header' => 'value',
         ]);

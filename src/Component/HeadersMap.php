@@ -4,21 +4,29 @@ declare(strict_types=1);
 
 namespace Boson\Component\Http\Component;
 
+use Boson\Component\Http\Component\Headers\Header;
+use Boson\Component\Http\Exception\InvalidHeaderValueException;
+use Boson\Contracts\Http\Component\EvolvableHeadersInterface;
 use Boson\Contracts\Http\Component\HeadersInterface;
 
 /**
  * An implementation of immutable headers list.
  *
- * @phpstan-type HeadersListInputType iterable<non-empty-lowercase-string, list<string>>
+ * @phpstan-import-type InHeaderNameType from HeadersInterface
+ * @phpstan-import-type OutHeaderNameType from HeadersInterface
+ * @phpstan-import-type InHeaderValueType from HeadersInterface
+ * @phpstan-import-type OutHeaderValueType from HeadersInterface
+ * @phpstan-import-type InHeaderValuesType from HeadersInterface
+ * @phpstan-import-type OutHeaderValuesType from HeadersInterface
+ * @phpstan-import-type InHeadersListType from HeadersInterface
+ * @phpstan-import-type OutHeadersListType from HeadersInterface
  *
- * @phpstan-import-type HeadersListOutputType from HeadersInterface
- *
- * @template-implements \IteratorAggregate<non-empty-lowercase-string, string>
+ * @template-implements \IteratorAggregate<OutHeaderNameType, OutHeaderValueType>
  */
-class HeadersMap implements HeadersInterface, \IteratorAggregate
+class HeadersMap implements EvolvableHeadersInterface, \IteratorAggregate
 {
     /**
-     * @var HeadersListOutputType
+     * @var OutHeadersListType
      */
     protected array $lines;
 
@@ -32,11 +40,55 @@ class HeadersMap implements HeadersInterface, \IteratorAggregate
      * ]
      * ```
      *
-     * @param HeadersListInputType $headers
+     * @param InHeadersListType $headers
      */
     final public function __construct(iterable $headers = [])
     {
-        $this->lines = \iterator_to_array($headers);
+        $this->lines = static::castHeadersList($headers);
+    }
+
+    /**
+     * @param InHeaderValuesType $values
+     *
+     * @return OutHeaderValuesType
+     */
+    public static function castHeaderValues(string|\Stringable|iterable $values, bool $validate = true): array
+    {
+        $result = [];
+
+        if (!\is_iterable($values)) {
+            $values = [$values];
+        }
+
+        foreach ($values as $value) {
+            $result[] = Header::castHeaderValue(match (true) {
+                \is_string($value), $value instanceof \Stringable => $value,
+                default => throw InvalidHeaderValueException::becauseHeaderValueIsNotString($value),
+            }, $validate);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param InHeadersListType $headers
+     *
+     * @return OutHeadersListType
+     */
+    public static function castHeadersList(iterable $headers, bool $validate = true): array
+    {
+        $result = [];
+
+        foreach ($headers as $name => $values) {
+            $normalizedName = Header::castHeaderName($name, $validate);
+            $normalizedValues = static::castHeaderValues($values, $validate);
+
+            $result[$normalizedName] = isset($result[$normalizedName])
+                ? \array_merge($result[$normalizedName], $normalizedValues)
+                : $normalizedValues;
+        }
+
+        return $result;
     }
 
     /**
@@ -53,90 +105,110 @@ class HeadersMap implements HeadersInterface, \IteratorAggregate
         return new self($headers->toArray());
     }
 
-    /**
-     * According to HTTP specifications, specifically RFC-9110 and its
-     * predecessors like RFC-2616 and RFC-7230, HTTP header names are
-     * case-insensitive. This means that "Content-Type", "content-type",
-     * and "CONTENT-TYPE" are all treated as the same header name by
-     * compliant HTTP implementations.
-     *
-     * While the standard dictates case-insensitivity, HTTP/2 mandates
-     * that header names be converted to lowercase for various reasons,
-     * including performance optimization and simplification. Therefore,
-     * if interacting with an HTTP/2 server, the header names will
-     * consistently appear in lowercase.
-     *
-     * @phpstan-pure
-     *
-     * @param non-empty-string $name
-     *
-     * @return non-empty-lowercase-string
-     */
-    final public static function getNormalizedHeaderName(string $name): string
-    {
-        return \strtolower($name);
-    }
-
-    /**
-     * @param non-empty-string $name
-     */
-    public function withAddedHeader(string $name, string $value): self
+    public function withAddedHeader(string|\Stringable $name, string|\Stringable $value): self
     {
         if ($name === '') {
             return $this;
         }
 
-        $headers = $this->lines;
-        $headers[self::getNormalizedHeaderName($name)][] = $value;
+        $self = clone $this;
+        $self->add($name, $value);
 
-        return new self($headers);
+        return $self;
     }
 
-    /**
-     * @param non-empty-string $name
-     */
-    public function withoutHeader(string $name): self
+    public function withHeader(\Stringable|string $name, iterable|\Stringable|string $values): self
+    {
+        $self = clone $this;
+        $self->set($name, $values);
+
+        return $self;
+    }
+
+    public function withoutHeader(string|\Stringable $name): self
     {
         if ($name === '') {
             return $this;
         }
 
-        $headers = $this->lines;
-        unset($headers[self::getNormalizedHeaderName($name)]);
+        $self = clone $this;
+        $self->remove($name);
 
-        return new self($headers);
+        return $self;
     }
 
-    public function first(string $name, ?string $default = null): ?string
+    /**
+     * @param InHeaderNameType $name
+     * @param InHeaderValuesType $values
+     */
+    protected function set(\Stringable|string $name, iterable|\Stringable|string $values): void
     {
-        $formatted = self::getNormalizedHeaderName($name);
+        $this->lines[Header::castHeaderName($name)] = self::castHeaderValues($values);
+    }
+
+    /**
+     * @param InHeaderNameType $name
+     * @param InHeaderValueType $value
+     */
+    protected function add(\Stringable|string $name, \Stringable|string $value): void
+    {
+        $this->lines[Header::castHeaderName($name)][] = Header::castHeaderValue($value);
+    }
+
+    /**
+     * @param InHeaderNameType $name
+     */
+    protected function remove(\Stringable|string $name): void
+    {
+        if ($name === '') {
+            return;
+        }
+
+        unset($this->lines[Header::castHeaderName($name, false)]);
+    }
+
+    protected function removeAll(): void
+    {
+        $this->lines = [];
+    }
+
+    public function first(string|\Stringable $name, string|\Stringable|null $default = null): ?string
+    {
+        $normalizedName = Header::castHeaderName($name, false);
         $lines = $this->lines;
 
-        if (\array_key_exists($formatted, $lines)) {
-            return $lines[$formatted][0] ?? $default;
+        if (\array_key_exists($normalizedName, $lines)) {
+            $first = $lines[$normalizedName][0] ?? null;
+
+            if ($first !== null) {
+                return $first;
+            }
         }
 
-        return $default;
+        if ($default === null) {
+            return null;
+        }
+
+        return Header::castHeaderValue($default, false);
     }
 
-    public function all(string $name): array
+    public function all(string|\Stringable $name): array
     {
-        return $this->lines[self::getNormalizedHeaderName($name)]
+        return $this->lines[Header::castHeaderName($name, false)]
             ?? [];
     }
 
-    public function has(string $name): bool
+    public function has(string|\Stringable $name): bool
     {
-        $formatted = self::getNormalizedHeaderName($name);
-
-        return \array_key_exists($formatted, $this->lines);
+        return \array_key_exists(Header::castHeaderName($name, false), $this->lines);
     }
 
-    public function contains(string $name, string $value): bool
+    public function contains(string|\Stringable $name, string|\Stringable $value): bool
     {
-        $formatted = self::getNormalizedHeaderName($name);
+        $normalizedName = Header::castHeaderName($name, false);
+        $normalizedValue = Header::castHeaderValue($value, false);
 
-        return \in_array($value, $this->lines[$formatted] ?? [], true);
+        return \in_array($normalizedValue, $this->lines[$normalizedName] ?? [], true);
     }
 
     public function getIterator(): \Traversable

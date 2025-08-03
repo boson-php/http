@@ -75,7 +75,7 @@ final class MutableHeadersMapTest extends TestCase
 
     public function testCreateFromIterable(): void
     {
-        $headers = MutableHeadersMap::createFromIterable([
+        $headers = new MutableHeadersMap([
             'Content-Type' => 'application/json',
             'X-Custom-Header' => ['value1', 'value2'],
         ]);
@@ -89,7 +89,7 @@ final class MutableHeadersMapTest extends TestCase
 
     public function testCreateFromHeadersMap(): void
     {
-        $original = MutableHeadersMap::createFromIterable([
+        $original = new MutableHeadersMap([
             'Content-Type' => 'application/json',
         ]);
 
@@ -120,7 +120,7 @@ final class MutableHeadersMapTest extends TestCase
             'x-custom' => 'value2',
         ];
 
-        $headers = MutableHeadersMap::createFromIterable([
+        $headers = new MutableHeadersMap([
             'Content-Type' => 'application/json',
             'X-Custom' => ['value1', 'value2'],
         ]);
