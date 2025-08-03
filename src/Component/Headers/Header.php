@@ -58,7 +58,7 @@ final readonly class Header
      * @throws InvalidHeaderNameException in case of passed user-defined header
      *         name is invalid or contain invalid characters
      */
-    public static function castHeaderName(string|\Stringable $name, bool $validate = true): string
+    public static function castHeaderName(\Stringable|string $name, bool $validate = true): string
     {
         if ($name instanceof \Stringable) {
             try {
@@ -117,7 +117,7 @@ final readonly class Header
      * @throws InvalidHeaderValueException in case of passed user-defined header
      *         value is not valid or contain invalid characters
      */
-    public static function castHeaderValue(string|\Stringable $value, bool $validate = true): string
+    public static function castHeaderValue(\Stringable|string $value, bool $validate = true): string
     {
         if ($value instanceof \Stringable) {
             try {

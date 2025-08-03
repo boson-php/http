@@ -39,7 +39,7 @@ class JsonResponse extends Response
      */
     public function __construct(
         mixed $data = null,
-        int|StatusCodeInterface $status = self::DEFAULT_STATUS_CODE,
+        StatusCodeInterface|int $status = self::DEFAULT_STATUS_CODE,
         iterable $headers = self::DEFAULT_HEADERS,
         /**
          * JSON body encoding flags bit-mask.
@@ -73,7 +73,7 @@ class JsonResponse extends Response
      * @return InBodyType
      * @throws \JsonException
      */
-    protected function formatJsonBody(mixed $data): string|\Stringable
+    protected function formatJsonBody(mixed $data): \Stringable|string
     {
         return \json_encode($data, $this->jsonEncodingFlags | \JSON_THROW_ON_ERROR);
     }

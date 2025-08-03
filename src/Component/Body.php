@@ -34,7 +34,7 @@ final readonly class Body
      *
      * @phpstan-ignore throws.unusedType
      */
-    public static function create(string|\Stringable $body): string
+    public static function create(\Stringable|string $body): string
     {
         if ($body instanceof \Stringable) {
             try {
@@ -58,7 +58,7 @@ final readonly class Body
      * @return OutMutableBodyType Returned formatted (and validated) HTTP body
      * @throws InvalidBodyException in case of body creation error occurs
      */
-    public static function createMutable(string|\Stringable $body): string
+    public static function createMutable(\Stringable|string $body): string
     {
         // Mutable HTTP body is similar to immutable
         return self::create($body);

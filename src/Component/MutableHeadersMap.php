@@ -8,7 +8,7 @@ use Boson\Contracts\Http\Component\MutableHeadersInterface;
 
 class MutableHeadersMap extends HeadersMap implements MutableHeadersInterface
 {
-    public function set(\Stringable|string $name, iterable|\Stringable|string $values): void
+    public function set(\Stringable|string $name, \Stringable|string|iterable $values): void
     {
         parent::set($name, $values);
     }

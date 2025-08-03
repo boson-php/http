@@ -687,7 +687,7 @@ final readonly class Method implements MethodInterface
      * @return OutMethodType
      * @throws InvalidMethodException
      */
-    public static function create(string|\Stringable $method): MethodInterface
+    public static function create(\Stringable|string $method): MethodInterface
     {
         if ($method instanceof MethodInterface) {
             return $method;
@@ -718,7 +718,7 @@ final readonly class Method implements MethodInterface
      * @return OutMutableMethodType
      * @throws InvalidMethodException
      */
-    public static function createMutable(string|\Stringable $method): MethodInterface
+    public static function createMutable(\Stringable|string $method): MethodInterface
     {
         // Mutable HTTP method is similar to immutable
         return self::create($method);

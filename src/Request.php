@@ -40,12 +40,12 @@ class Request implements EvolvableRequestInterface
     /**
      * @var InMethodType
      */
-    final public const string|\Stringable DEFAULT_METHOD = Method::Get;
+    final public const \Stringable|string DEFAULT_METHOD = Method::Get;
 
     /**
      * @var InUrlType
      */
-    final public const string|\Stringable DEFAULT_URL = 'about:blank';
+    final public const \Stringable|string DEFAULT_URL = 'about:blank';
 
     /**
      * @var InHeadersType
@@ -55,7 +55,7 @@ class Request implements EvolvableRequestInterface
     /**
      * @var InBodyType
      */
-    final public const string|\Stringable DEFAULT_BODY = '';
+    final public const \Stringable|string DEFAULT_BODY = '';
 
     /**
      * @var OutMethodType
@@ -68,7 +68,7 @@ class Request implements EvolvableRequestInterface
         /**
          * @param InMethodType $method
          */
-        set(string|\Stringable $method) => static::castMethod($method);
+        set(\Stringable|string $method) => static::castMethod($method);
     }
 
     /**
@@ -82,7 +82,7 @@ class Request implements EvolvableRequestInterface
         /**
          * @param InUrlType $url
          */
-        set(string|\Stringable $url) => static::castUrl($url);
+        set(\Stringable|string $url) => static::castUrl($url);
     }
 
     private static UriFactoryInterface $uriFactory;
@@ -116,7 +116,7 @@ class Request implements EvolvableRequestInterface
          *
          * @throws InvalidBodyException
          */
-        set(string|\Stringable $body) => static::castBody($body);
+        set(\Stringable|string $body) => static::castBody($body);
     }
 
     /**
@@ -126,10 +126,10 @@ class Request implements EvolvableRequestInterface
      * @param InBodyType $body
      */
     public function __construct(
-        string|\Stringable $method = self::DEFAULT_METHOD,
-        string|\Stringable $url = self::DEFAULT_URL,
+        \Stringable|string $method = self::DEFAULT_METHOD,
+        \Stringable|string $url = self::DEFAULT_URL,
         iterable $headers = self::DEFAULT_HEADERS,
-        string|\Stringable $body = self::DEFAULT_BODY,
+        \Stringable|string $body = self::DEFAULT_BODY,
     ) {
         $this->method = $method;
         $this->url = $url;
@@ -142,7 +142,7 @@ class Request implements EvolvableRequestInterface
      *
      * @return OutMethodType
      */
-    public static function castMethod(string|\Stringable $method): MethodInterface
+    public static function castMethod(\Stringable|string $method): MethodInterface
     {
         return Method::create($method);
     }
@@ -152,7 +152,7 @@ class Request implements EvolvableRequestInterface
      *
      * @return OutUrlType
      */
-    public static function castUrl(string|\Stringable $url): UriInterface
+    public static function castUrl(\Stringable|string $url): UriInterface
     {
         $factory = self::$uriFactory ??= new UriFactory();
 
@@ -176,7 +176,7 @@ class Request implements EvolvableRequestInterface
      * @return OutBodyType
      * @throws InvalidBodyException
      */
-    public static function castBody(string|\Stringable $body): string
+    public static function castBody(\Stringable|string $body): string
     {
         return Body::create($body);
     }
@@ -200,7 +200,7 @@ class Request implements EvolvableRequestInterface
         );
     }
 
-    public function withMethod(\Stringable|string $method): self
+    public function withMethod(MethodInterface|\Stringable|string $method): self
     {
         $self = clone $this;
         $self->method = $method;
@@ -208,7 +208,7 @@ class Request implements EvolvableRequestInterface
         return $self;
     }
 
-    public function withUrl(\Stringable|string $url): self
+    public function withUrl(UriInterface|\Stringable|string $url): self
     {
         $self = clone $this;
         $self->url = $url;

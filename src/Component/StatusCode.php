@@ -1707,7 +1707,7 @@ final readonly class StatusCode implements StatusCodeInterface
      *
      * @return OutStatusCodeType
      */
-    public static function create(int|StatusCodeInterface $status, ?string $reason = null): StatusCodeInterface
+    public static function create(StatusCodeInterface|int $status, ?string $reason = null): StatusCodeInterface
     {
         if ($status instanceof StatusCodeInterface) {
             return $status;
@@ -1722,7 +1722,7 @@ final readonly class StatusCode implements StatusCodeInterface
      *
      * @return OutMutableStatusCodeType
      */
-    public static function createMutable(int|StatusCodeInterface $status, ?string $reason = null): StatusCodeInterface
+    public static function createMutable(StatusCodeInterface|int $status, ?string $reason = null): StatusCodeInterface
     {
         // Mutable HTTP status code is similar to immutable
         return self::create($status, $reason);
