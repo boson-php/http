@@ -119,6 +119,8 @@ class Response implements MutableResponseInterface
      *
      * @return OutMutableBodyType
      * @throws InvalidBodyException
+     *
+     * @internal This method is not covered by the backward compatibility promise for boson-php/http
      */
     public static function castBody(\Stringable|string $body): string
     {
@@ -130,6 +132,8 @@ class Response implements MutableResponseInterface
      * @param string|null $reason Reason phrase for new non-standard status-code
      *
      * @return OutMutableStatusCodeType
+     *
+     * @internal This method is not covered by the backward compatibility promise for boson-php/http
      */
     public static function castStatusCode(StatusCodeInterface|int $status, ?string $reason = null): StatusCodeInterface
     {
@@ -141,6 +145,8 @@ class Response implements MutableResponseInterface
      *
      * @return OutMutableHeadersType
      * @throws InvalidHeadersException
+     *
+     * @internal This method is not covered by the backward compatibility promise for boson-php/http
      */
     public static function castHeaders(iterable $headers): MutableHeadersInterface
     {
