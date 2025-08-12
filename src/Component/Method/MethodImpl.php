@@ -11,19 +11,26 @@ use Boson\Contracts\Http\Component\MethodInterface;
  */
 trait MethodImpl
 {
+    /**
+     * @var non-empty-uppercase-string
+     */
+    public readonly string $name;
+
+    /**
+     * @param non-empty-string $name
+     */
     public function __construct(
-        /**
-         * @var non-empty-uppercase-string
-         */
-        public readonly string $name,
+        string $name,
         public readonly ?bool $isIdempotent = null,
         public readonly ?bool $isSafe = null,
-    ) {}
+    ) {
+        $this->name = \strtoupper($name);
+    }
 
     public function equals(mixed $other): bool
     {
         return $other === $this
-            || ($other instanceof self
+            || ($other instanceof MethodInterface
                 && $other->name === $this->name);
     }
 
