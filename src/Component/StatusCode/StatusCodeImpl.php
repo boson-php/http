@@ -55,7 +55,7 @@ trait StatusCodeImpl
     public function equals(mixed $other): bool
     {
         return $other === $this
-            || ($other instanceof self
+            || ($other instanceof StatusCodeInterface
                 && $other->code === $this->code);
     }
 
