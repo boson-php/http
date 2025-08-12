@@ -52,15 +52,30 @@ final readonly class Header
      * and for further use. Validation MAY be disabled if the name is used
      * only to retrieve data from a header list.
      *
-     * @param InHeaderNameType $name Expected user-defined header name to cast
+     * @param InHeaderNameType|int $name Expected user-defined header name to
+     *        cast.
+     *
+     *        Note that the name can be an {@see int}. This is due to a
+     *        bug/feature in PHP that automatically converts string keys
+     *        to an integers.
+     *
+     *        ```
+     *        $headers = ['0' => [ 'value' ]];
+     *
+     *        var_dump($headers);
+     *
+     *        // array:1 [
+     *        //   0 => array:1 [ 0 => "value" ]
+     *        // ]
+     *        ```
      *
      * @return OutHeaderNameType Returned formatted (and validated) header name
      * @throws InvalidHeaderNameException in case of passed user-defined header
      *         name is invalid or contain invalid characters
      */
-    public static function castHeaderName(\Stringable|string $name, bool $validate = true): string
+    public static function castHeaderName(\Stringable|string|int $name, bool $validate = true): string
     {
-        if ($name instanceof \Stringable) {
+        if ($name instanceof \Stringable || \is_int($name)) {
             try {
                 $scalar = (string) $name;
                 /** @phpstan-ignore-next-line : PHPStan false-positive, this is not "dead catch" */
