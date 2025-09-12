@@ -1,0 +1,11 @@
+parameters:
+  level: max
+  scanFiles:
+    - resources/stubs/constants.stub
+  strictRules:
+    allRules: true
+  fileExtensions:
+    - php
+  paths:
+    - src
+  tmpDir: vendor/.cache.phpstan
